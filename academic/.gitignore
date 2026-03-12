@@ -50,18 +50,18 @@ production/logs/
 ########################################
 # DATA (ACADEMIC)
 ########################################
-academic/data/raw/*
-academic/data/processed/*
-!academic/data/splits/
-!academic/data/splits/*.json
-!academic/data/splits/*.txt
+data/raw/*
+data/processed/*
+data/splits/
+!data/splits/*.json
+!data/splits/*.txt
 
 ########################################
 # MODELS (ACADEMIC)
 ########################################
-academic/models/checkpoints/
-academic/models/exported/
-academic/models/pretrained/
+models/checkpoints/
+models/exported/
+models/pretrained/
 
 ########################################
 # NOTEBOOK CHECKPOINTS
@@ -71,7 +71,7 @@ academic/models/pretrained/
 ########################################
 # REPORT ARTIFACTS
 ########################################
-academic/reports/figures/*
-academic/reports/tables/*
+reports/figures/*
+reports/tables/*
 
 workup/
