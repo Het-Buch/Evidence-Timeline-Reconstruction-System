@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class PositionalEncoding(nn.Module):
 
-    def __init__(self, d_model, max_len=500):
+    def __init__(self, d_model, max_len=2000):
         super().__init__()
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,8 +38,8 @@ class TemporalTransformer(nn.Module):
         d_model=256,
         n_heads=8,
         num_layers=4,
-        num_classes=5,
-        dropout=0.1,
+        num_classes=2,
+        dropout=0.3,
     ):
         super().__init__()
 

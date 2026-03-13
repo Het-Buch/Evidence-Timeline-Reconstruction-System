@@ -75,3 +75,5 @@ reports/figures/*
 reports/tables/*
 
 workup/
+
+outputs/*
