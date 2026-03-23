@@ -1,0 +1,79 @@
+🎯 FINAL STRATEGY (NO FILE LEFT BEHIND)
+
+We will now proceed in STRICT ORDER:
+
+🚀 PHASE 1 — Graph Core (START NOW)
+graph_builder.py
+rule_engine.py
+
+👉 converts predictions → timeline
+
+🚀 PHASE 2 — Evaluation
+temporal_metrics.py
+boundary_f1.py
+
+👉 proves your model works
+
+🚀 PHASE 3 — Action Module Integration
+x3d_encoder.py
+embedding_utils.py
+
+👉 improves feature quality
+
+🚀 PHASE 4 — Ablation
+no_tracking.py
+no_action_features.py
+lstm_variant.py
+
+👉 required for paper
+
+🚀 PHASE 5 — Explainability
+attention_maps.py
+gradcam.py
+🚀 PHASE 6 — Notebooks
+
+👉 convert all outputs into:
+
+plots
+graphs
+insights
+🚀 PHASE 7 — API + Streamlit
+
+👉 final system demo
+
+🧠 KEY RULE (YOU SAID THIS)
+
+no file should be left
+
+So we enforce:
+
+EVERY file = one role in pipeline
+💥 IMPORTANT DECISION
+
+We will NOT:
+
+❌ jump randomly
+❌ skip modules
+❌ partially implement
+
+We WILL:
+
+complete module → integrate → move next
+🎯 NEXT STEP (LOCKED)
+
+👉 Start:
+
+🔥 graph_builder.py
+
+Because everything depends on it.
+
+💬 Say now
+
+👉 "start graph_builder (strict integration mode)"
+
+And I will:
+
+✔ give production-level code
+✔ align with your folder structure
+✔ ensure future modules plug into it
+✔ keep ALL files usable later
