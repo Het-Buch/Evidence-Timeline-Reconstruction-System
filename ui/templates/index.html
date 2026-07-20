@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evidence Timeline Reconstruction</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <script id="app-config" type="application/json">{{ {
+    "classes": classes,
+    "classColors": class_colors,
+    "device": device,
+    "api": {
+      "status": url_for('status'),
+      "analyze": url_for('analyze'),
+      "history": url_for('history')
+    }
+  } | tojson }}</script>
+
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">Evidence Timeline Reconstruction</div>
+      <h1>Upload, analyze, and inspect anomaly timelines.</h1>
+    </div>
+    <div class="status-badge" id="status-badge">Checking model...</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel controls">
+      <div class="panel-title">Upload Video</div>
+
+      <label class="upload-zone" id="drop-zone">
+        <input type="file" id="video-file" accept="video/*">
+        <div class="upload-icon">🎥</div>
+        <strong>Click to upload</strong>
+        <span>or drag and drop a video file</span>
+        <small>MP4, AVI, MKV up to 500 MB</small>
+        <div id="file-name" class="file-name"></div>
+      </label>
+
+      <div class="divider">or use a local path</div>
+
+      <div class="form-row">
+        <label for="video-path">Video File Path</label>
+        <input type="text" id="video-path" placeholder="e.g. D:\\videos\\sample.mp4">
+      </div>
+
+      <div class="form-row">
+        <label for="fps-range">Sample Rate <span id="fps-label">1 frame/sec</span></label>
+        <input type="range" id="fps-range" min="1" max="5" value="1">
+      </div>
+
+      <button class="btn btn-primary" id="analyze-btn" type="button">Analyze Video</button>
+
+      <div class="progress-wrap" id="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
+        <div class="progress-label" id="prog-label">Preparing analysis...</div>
+      </div>
+    </section>
+
+    <section class="panel history-panel">
+      <div class="panel-title">Analysis History</div>
+      <button class="btn btn-secondary" id="refresh-history-btn" type="button">Refresh</button>
+      <div class="history-list" id="history-list">
+        <div class="empty-state">No history yet.</div>
+      </div>
+    </section>
+
+    <section id="placeholder" class="panel placeholder-panel">
+      <div>
+        <div class="placeholder-icon">📊</div>
+        <h2>Upload a video to see the anomaly timeline.</h2>
+        <p>The app will sample frames, run the best available model, and reconstruct a timestamped event view.</p>
+      </div>
+    </section>
+
+    <section id="results-panel" class="results-panel" style="display:none">
+      <div class="stats-row" id="stats-row"></div>
+
+      <div class="panel">
+        <div class="panel-title">Anomaly Timeline</div>
+        <div class="timeline-wrap">
+          <div class="timeline-bar" id="timeline-bar"></div>
+          <div class="timeline-labels" id="timeline-labels"></div>
+        </div>
+        <div class="hint">Hover segments for details. Green means normal, warmer colors indicate anomalies.</div>
+      </div>
+
+      <div class="split-grid">
+        <section class="panel">
+          <div class="panel-title">Detected Events</div>
+          <div class="events-list" id="events-list"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">Class Distribution</div>
+          <div class="prob-bars" id="class-dist"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-title">Frame-level Predictions</div>
+        <div id="frame-preds" class="frame-preds"></div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast"></div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

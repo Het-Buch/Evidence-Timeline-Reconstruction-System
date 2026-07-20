@@ -1,0 +1,239 @@
+# ============================================================
+# Evidence Timeline Reconstruction System — Master Config
+# Dataset: UCF-Crime | 14 Classes | 1100+ Videos
+# 7-Model Comparative Analysis Pipeline
+# ============================================================
+
+project:
+  name: "Evidence Timeline Reconstruction"
+  seed: 42
+  device: "cuda"
+
+dataset:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  splits_dir: "data/splits"
+  classes:
+    - Abuse
+    - Arrest
+    - Arson
+    - Assault
+    - Burglary
+    - Explosion
+    - Fighting
+    - RoadAccidents
+    - Robbery
+    - Shooting
+    - Shoplifting
+    - Stealing
+    - Vandalism
+    - Normal
+  num_classes: 14
+  max_videos_per_class: null
+  train_split: 0.70
+  val_split:   0.15
+  test_split:  0.15
+
+  # ── Grouped class mode ──────────────────────────────────
+  # Merges 14 classes into 5 balanced groups.
+  # Actual video counts: Normal=150, Robbery=150, RoadAccidents=150,
+  #   Stealing=100, Burglary=100, rest=50 each.
+  # Groups designed for visual similarity + size balance:
+  #   Normal:       150 videos
+  #   Theft:        150+100+50+100 = 400 videos (Robbery,Stealing,Burglary,Shoplifting)
+  #   Violence:     50+50+50 = 150 (Abuse,Assault,Fighting)
+  #   Hazard/Chaos: 50+50+50+150 = 300 (Arson,Explosion,Vandalism,RoadAccidents)
+  #   Enforcement:  50+50 = 100 (Arrest,Shooting)
+  grouped_classes:
+    - name: "Normal"
+      classes: ["Normal"]
+    - name: "Theft"
+      classes: ["Robbery", "Stealing", "Burglary", "Shoplifting"]
+    - name: "Violence"
+      classes: ["Abuse", "Assault", "Fighting"]
+    - name: "Hazard"
+      classes: ["Arson", "Explosion", "Vandalism", "RoadAccidents"]
+    - name: "Enforcement"
+      classes: ["Arrest", "Shooting"]
+
+frames:
+  fps: 3
+  img_size: 224
+  output_dir: "data/processed/frames"
+
+optical_flow:
+  enabled: false
+  output_dir: "data/processed/optical_flow"
+  method: "farneback"
+
+segmentation:
+  enabled: false
+  output_dir: "data/processed/segments"
+
+# ── Training ─────────────────────────────────────────────────
+training:
+  video_level_training: true
+  frames_per_video: 16
+  batch_size: 8
+  num_workers: 6
+  prefetch_factor: 4
+  epochs: 60
+  early_stopping_patience: 15
+  learning_rate: 1e-3
+  weight_decay: 4e-3
+  scheduler: "cosine"
+  use_class_weights: true
+  mixed_precision: true
+  mixup_alpha: 0.0           # Disabled globally; each model sets its own
+  tta_flips: true
+  seq_len: 16
+  stride_train: 8
+  stride_val: 16
+
+# ── 7 Models for Comparative Analysis ────────────────────────
+# Architecture families covered:
+#   3D Video CNN      : R2Plus1D, S3D
+#   Modern 2D CNN     : EfficientNetB3, ConvNeXtTiny
+#   Vision Transformer: SwinT
+#   Temporal RNN      : CNNLSTM
+#   Temporal Attention: CNNTransformer
+models:
+
+  # ── 1. R(2+1)D-18 — 5-group, BEST EXPECTED MODEL ────────
+  # Kinetics-400 pretrained on ACTION RECOGNITION — motion is the key signal.
+  # 5 groups: Normal/Theft/Violence/Hazard/Enforcement.
+  # ~165-400 videos/group → 3-7× more than single 14-class.
+  # Dense sampling: 16 consecutive frames → model sees real motion patterns.
+  # Expected: 55-65% val accuracy (best of all 5 models).
+  - name: "R2Plus1D"
+    type: "video3d"
+    backbone: "r2plus1d_18"
+    pretrained: true
+    dropout: 0.5
+    img_size: 112
+    normalization: "kinetics"
+    backbone_lr_scale: 0.1
+    sampling: "dense"
+    mixup_alpha: 0.0
+    batch_size: 8
+    grouped: true
+
+  # ── 2. EfficientNet-B3 — 5-group classification ──────────
+  # grouped=true: 14 classes → 5 groups (Normal/Theft/Violence/Hazard/Enforcement)
+  # Group sizes: Normal=150, Theft=400, Violence=150, Hazard=300, Enforcement=100
+  # Frozen backbone + linear head (5 classes × 1536 features = 7.7K params)
+  # Expected val accuracy: 60-70%
+  - name: "EfficientNetB3"
+    type: "cnn"
+    backbone: "efficientnet_b3"
+    pretrained: true
+    freeze_backbone: true
+    full_freeze: true
+    simple_head: true
+    dropout: 0.5
+    img_size: 224
+    normalization: "imagenet"
+    backbone_lr_scale: 0.0
+    batch_size: 256
+    mixup_alpha: 0.0
+    frame_level: true
+    fl_frames: 20
+    grouped: true
+
+  # ── 3. ConvNeXt-Tiny — 5-group ──────────────────────────
+  - name: "ConvNeXtTiny"
+    type: "cnn"
+    backbone: "convnext_tiny"
+    pretrained: true
+    freeze_backbone: true
+    full_freeze: true
+    simple_head: true
+    dropout: 0.5
+    img_size: 224
+    normalization: "imagenet"
+    backbone_lr_scale: 0.0
+    batch_size: 256
+    mixup_alpha: 0.0
+    frame_level: true
+    fl_frames: 20
+    grouped: true
+
+  # ── 4. Swin Transformer-Tiny — 5-group ───────────────────
+  - name: "SwinT"
+    type: "transformer"
+    backbone: "swin_t"
+    pretrained: true
+    freeze_backbone: true
+    full_freeze: true
+    simple_head: true
+    dropout: 0.5
+    img_size: 224
+    normalization: "imagenet"
+    backbone_lr_scale: 0.0
+    batch_size: 128
+    mixup_alpha: 0.0
+    frame_level: true
+    fl_frames: 20
+    grouped: true
+
+  # ── 5. CNN-LSTM — Video-level mode (same speed as other models) ────
+  # video_level:true → VideoLevelDataset (~100 batches/epoch, not 6000+)
+  # batch_size:16 fills 12 GB VRAM to ~80%
+  - name: "CNNLSTM"
+    type: "temporal"
+    video_level: true
+    batch_size: 16
+    pretrained: true
+    hidden_size: 512
+    num_layers: 2
+    dropout: 0.4
+    grouped: true
+
+  # ── Disabled (comparative only, not in main 5-model run) ──
+  - name: "S3D"
+    type: "video3d"
+    backbone: "s3d"
+    pretrained: true
+    dropout: 0.5
+    img_size: 224
+    normalization: "kinetics"
+    backbone_lr_scale: 0.3
+    batch_size: 4
+    sampling: "dense"
+    mixup_alpha: 0.0
+    enabled: false
+
+  - name: "CNNTransformer"
+    type: "temporal"
+    pretrained: true
+    d_model: 512
+    nhead: 8
+    num_layers: 4
+    dropout: 0.1
+    enabled: false
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1
+    - roc_auc
+    - confusion_matrix
+  generate_learning_curves: true
+  generate_class_wise_report: true
+  confidence_threshold: 0.5
+  results_dir: "results"
+
+xai:
+  enabled: true
+  methods:
+    - gradcam
+    - lime
+  num_samples: 20
+  output_dir: "results/xai"
+
+paths:
+  weights_dir: "models/weights"
+  checkpoints_dir: "models/checkpoints"
+  logs_dir: "results/logs"
